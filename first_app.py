@@ -27,9 +27,9 @@ st.markdown(hide_footer_style, unsafe_allow_html=True)
 
 def search_params(df):
     
-    st_x1s = [i for i in range(2, 12)]
-    st_x2s = [i for i in range(2, 12)]
-    st_x3s = [i for i in range(2, 12)]
+    st_x1s = [i for i in range(2, 10)]
+    st_x2s = [i for i in range(2, 10)]
+    st_x3s = [i for i in range(2, 10)]
     opt_err = np.inf
     opt_dct = dict()
     all_results = []

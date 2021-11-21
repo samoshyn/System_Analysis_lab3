@@ -50,7 +50,7 @@ def eval_combined_cheb(n, x):
 
 def scaling(y, f):
     t = f - y
-    y = y + t / 2
+    y = y + t / 4
     y_norm = (y - np.min(y, 0)) / (np.max(y, 0) - np.min(y, 0))
     f_norm = (f - np.min(f, 0)) / (np.max(f, 0) - np.min(f, 0))
     

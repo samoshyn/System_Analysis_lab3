@@ -96,20 +96,14 @@ class Solve(object):
         self.datas = self.filename_input[:self.n]
         self.dim_integral = [sum(self.dim[:i + 1]) for i in range(len(self.dim))]
 
-    def _minimize_equation(self, A, b, type='cjg3'):
+    def _minimize_equation(self, A, b, type='cjg'):
         """
         Finds such vector x that |Ax-b|->min.
         :param A: Matrix A
         :param b: Vector b
         :return: Vector x
         """
-        if type == 'lsq':
-            return np.linalg.lstsq(A, b)[0]
-        elif type == 'cjg':
-            return conjugate_gradient_method(A.T * A, A.T * b, self.eps)
-        elif type == 'cjg2':
-            return conjugate_gradient_method_v2(A.T * A, A.T * b, self.eps)
-        elif type == 'cjg3':
+        if type == 'cjg':
             return conjugate_gradient_method_v3(A.T * A, A.T * b, self.eps)
         elif type == 'g':
             return gradient_descent(A.T * A, A.T * b, self.eps)
@@ -353,7 +347,7 @@ class Solve(object):
         #self.F = self.F_log
         self.norm_error = []
         for i in range(self.Y.shape[1]):
-            self.norm_error.append(np.linalg.norm(self.Y[:, i] - self.F[:, i], np.inf))
+            self.norm_error.append(np.linalg.norm(self.Y[:, i] - self.F[:, i], np.inf) / 2)
 
     def built_F_(self):
         minY = self.Y_.min(axis=0)
@@ -410,7 +404,7 @@ class Solve(object):
             df = pd.DataFrame([self.F_[i].tolist()[0] for i in range(self.n)])
             df.to_excel(writer, sheet_name='Y перебудовані')
             
-            df = pd.DataFrame([self.norm_error / 2])
+            df = pd.DataFrame([self.norm_error])
             df.to_excel(writer, sheet_name='Нормалізована похибка (Y - F)')
             
             df = pd.DataFrame([self.error])

@@ -127,7 +127,7 @@ def plots(solution):
     st.header('Графіки')
     cols = st.columns(solution._solution.Y.shape[1])
     for i, col in enumerate(cols):
-        time.sleep(0.1)
+        time.sleep(0.02)
         with col:
             col.subheader(f'Координата Y{i+1}')
             y = np.array(solution._solution.Y_[:, i]).reshape(-1,)

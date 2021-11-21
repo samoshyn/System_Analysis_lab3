@@ -347,7 +347,7 @@ class Solve(object):
         #self.F = self.F_log
         self.norm_error = []
         for i in range(self.Y.shape[1]):
-            self.norm_error.append(np.linalg.norm(self.Y[:, i] - self.F[:, i], np.inf) / 2)
+            self.norm_error.append(np.linalg.norm(self.Y[:, i] - self.F[:, i], np.inf))
 
     def built_F_(self):
         minY = self.Y_.min(axis=0)
@@ -404,8 +404,8 @@ class Solve(object):
             df = pd.DataFrame([self.F_[i].tolist()[0] for i in range(self.n)])
             df.to_excel(writer, sheet_name='Y перебудовані')
             
-            df = pd.DataFrame([self.norm_error])
-            df.to_excel(writer, sheet_name='Нормалізована похибка (Y - F)')
+#             df = pd.DataFrame([self.norm_error])
+#             df.to_excel(writer, sheet_name='Нормалізована похибка (Y - F)')
             
             df = pd.DataFrame([self.error])
             df.to_excel(writer, sheet_name='Похибка (Y_ - F_))')          

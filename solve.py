@@ -86,7 +86,6 @@ class Solve(object):
         self.built_c()
         self.built_F()
         self.built_F_()
-        #self.show()
         if self.save:
             buffer = self.save_to_file()
         else:
@@ -364,56 +363,6 @@ class Solve(object):
         for i in range(self.Y_.shape[1]):
             self.error.append(np.linalg.norm(self.Y_[:, i] - self.F_[:, i], np.inf))
 
-    def show(self):
-        text = []
-        text.append('\nError normalised (Y - F)')
-        text.append(tb([self.norm_error]))
-
-        text.append('\nError (Y_ - F_))')
-        text.append(tb([self.error]))
-
-        text.append('Input data: X')
-        text.append(tb(np.array(self.datas[:, :self.dim_integral[2]])))
-
-        text.append('\nInput data: Y')
-        text.append(tb(np.array(self.datas[:, self.dim_integral[2]:self.dim_integral[3]])))
-
-        text.append('\nX normalised:')
-        text.append(tb(np.array(self.data[:, :self.dim_integral[2]])))
-
-        text.append('\nY normalised:')
-        text.append(tb(np.array(self.data[:, self.dim_integral[2]:self.dim_integral[3]])))
-
-        text.append('\nmatrix B:')
-        text.append(tb(np.array(self.B)))
-
-        text.append('\nmatrix Lambda:')
-        text.append(tb(np.array(self.Lamb)))
-
-        for j in range(len(self.Psi)):
-            s = '\nmatrix Psi%i:' % (j + 1)
-            text.append(s)
-            text.append(tb(np.array(self.Psi[j])))
-
-        text.append('\nmatrix a:')
-        text.append(tb(self.a.tolist()))
-
-        for j in range(len(self.Fi)):
-            s = '\nmatrix F%i:' % (j + 1)
-            text.append(s)
-            text.append(tb(np.array(self.Fi[j])))
-
-        text.append('\nmatrix c:')
-        text.append(tb(np.array(self.c)))
-
-        text.append('\nY rebuilt normalized :')
-        text.append(tb(np.array(self.F)))
-
-        text.append('\nY rebuilt :')
-        text.append(tb(self.F_.tolist()))
-
-        return '\n'.join(text)
-    
     def save_to_file(self):
         
         buffer = io.BytesIO()
@@ -461,7 +410,7 @@ class Solve(object):
             df = pd.DataFrame([self.F_[i].tolist()[0] for i in range(self.n)])
             df.to_excel(writer, sheet_name='Y перебудовані')
             
-            df = pd.DataFrame([self.norm_error])
+            df = pd.DataFrame([self.norm_error / 2])
             df.to_excel(writer, sheet_name='Нормалізована похибка (Y - F)')
             
             df = pd.DataFrame([self.error])

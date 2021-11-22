@@ -54,7 +54,7 @@ def scaling(y, f):
     y_norm = (y - np.min(y, 0)) / (np.max(y, 0) - np.min(y, 0))
     f_norm = (f - np.min(f, 0)) / (np.max(f, 0) - np.min(f, 0))
     
-    return y_norm, f_norm
+    return y, f, y_norm, f_norm
 
 class Solve(object):
     OFFSET = 1e-10

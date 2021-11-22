@@ -132,7 +132,7 @@ def plots(solution):
             col.subheader(f'Координата Y{i+1}')
             y = np.array(solution._solution.Y_[:, i]).reshape(-1,)
             f = np.array(solution._solution.F_[:, i]).reshape(-1,)
-            y_norm, f_norm = scaling(y, f)
+            y, f, y_norm, f_norm = scaling(y, f)
             err = abs(y_norm - f_norm)
             col.line_chart({"Y": y,
                            "F": f})

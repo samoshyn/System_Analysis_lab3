@@ -54,7 +54,10 @@ def scaling(y, f):
     y_norm = (y - np.min(y, 0)) / (np.max(y, 0) - np.min(y, 0))
     f_norm = (f - np.min(f, 0)) / (np.max(f, 0) - np.min(f, 0))
     
-    return y, f, y_norm, f_norm
+    return y_norm, f_norm
+
+def custom_func(x):
+    return np.sinh(x)
 
 class Solve(object):
     OFFSET = 1e-10
@@ -66,6 +69,7 @@ class Solve(object):
         self.deg = list(map(lambda x: x + 1, d['degrees']))  # on 1 more because include 0
         self.weights = d['weights']
         self.poly_type = d['poly_type']
+        self.custom_f = True if d['is_custom_f']=='Власна' else False
         self.splitted_lambdas = d['lambda_multiblock']
         self.norm_error = 0.0
         self.eps = 1E-6
@@ -86,6 +90,7 @@ class Solve(object):
         self.built_c()
         self.built_F()
         self.built_F_()
+        #self.show()
         if self.save:
             buffer = self.save_to_file()
         else:
@@ -96,14 +101,20 @@ class Solve(object):
         self.datas = self.filename_input[:self.n]
         self.dim_integral = [sum(self.dim[:i + 1]) for i in range(len(self.dim))]
 
-    def _minimize_equation(self, A, b, type='cjg'):
+    def _minimize_equation(self, A, b, type='cjg3'):
         """
         Finds such vector x that |Ax-b|->min.
         :param A: Matrix A
         :param b: Vector b
         :return: Vector x
         """
-        if type == 'cjg':
+        if type == 'lsq':
+            return np.linalg.lstsq(A, b)[0]
+        elif type == 'cjg':
+            return conjugate_gradient_method(A.T * A, A.T * b, self.eps)
+        elif type == 'cjg2':
+            return conjugate_gradient_method_v2(A.T * A, A.T * b, self.eps)
+        elif type == 'cjg3':
             return conjugate_gradient_method_v3(A.T * A, A.T * b, self.eps)
         elif type == 'g':
             return gradient_descent(A.T * A, A.T * b, self.eps)
@@ -276,7 +287,10 @@ class Solve(object):
             for k in range(len(self.X)):  # choose X1 or X2 or X3
                 for s in range(self.X[k].shape[1]):  # choose X11 or X12 or X13
                     for i in range(self.X[k].shape[0]):
-                        psi[i, l] = self.A_log[i, q:q + self.deg[k]] * lamb[q:q + self.deg[k], 0]
+                        if self.custom_f:
+                            psi[i, l] = custom_func(self.A_log[i, q:q + self.deg[k]]) * lamb[q:q + self.deg[k], 0]
+                        else:
+                            psi[i, l] = self.A_log[i, q:q + self.deg[k]] * lamb[q:q + self.deg[k], 0]
                     q += self.deg[k]
                     l += 1
             return np.matrix(psi)
@@ -316,7 +330,10 @@ class Solve(object):
         #print('a', a)
         for j in range(m):  # 0 - 2
             for i in range(self.n):  # 0 - 49
-                F1i[i, j] = psi[i, k:self.dim_integral[j]] * a[k:self.dim_integral[j], 0]
+                if self.custom_f:
+                    F1i[i, j] = custom_func(psi[i, k:self.dim_integral[j]]) * a[k:self.dim_integral[j], 0]
+                else:
+                    F1i[i, j] = psi[i, k:self.dim_integral[j]] * a[k:self.dim_integral[j], 0]
             k = self.dim_integral[j]
         return np.matrix(F1i)
 
@@ -341,7 +358,10 @@ class Solve(object):
         #print('c:', self.c)
         for j in range(F.shape[1]):  # 2
             for i in range(F.shape[0]):  # 50
-                F[i, j] = self.Fi_log[j][i, :] * self.c[:, j]
+                if self.custom_f:
+                    F[i, j] = custom_func(self.Fi_log[j][i, :]) * self.c[:, j]
+                else:
+                    F[i, j] = self.Fi_log[j][i, :] * self.c[:, j]
         self.F_log = np.matrix(F)
         self.F = np.exp(self.F_log) - 1
         #self.F = self.F_log
@@ -357,6 +377,56 @@ class Solve(object):
         for i in range(self.Y_.shape[1]):
             self.error.append(np.linalg.norm(self.Y_[:, i] - self.F_[:, i], np.inf))
 
+    def show(self):
+        text = []
+        text.append('\nError normalised (Y - F)')
+        text.append(tb([self.norm_error]))
+
+        text.append('\nError (Y_ - F_))')
+        text.append(tb([self.error]))
+
+        text.append('Input data: X')
+        text.append(tb(np.array(self.datas[:, :self.dim_integral[2]])))
+
+        text.append('\nInput data: Y')
+        text.append(tb(np.array(self.datas[:, self.dim_integral[2]:self.dim_integral[3]])))
+
+        text.append('\nX normalised:')
+        text.append(tb(np.array(self.data[:, :self.dim_integral[2]])))
+
+        text.append('\nY normalised:')
+        text.append(tb(np.array(self.data[:, self.dim_integral[2]:self.dim_integral[3]])))
+
+        text.append('\nmatrix B:')
+        text.append(tb(np.array(self.B)))
+
+        text.append('\nmatrix Lambda:')
+        text.append(tb(np.array(self.Lamb)))
+
+        for j in range(len(self.Psi)):
+            s = '\nmatrix Psi%i:' % (j + 1)
+            text.append(s)
+            text.append(tb(np.array(self.Psi[j])))
+
+        text.append('\nmatrix a:')
+        text.append(tb(self.a.tolist()))
+
+        for j in range(len(self.Fi)):
+            s = '\nmatrix F%i:' % (j + 1)
+            text.append(s)
+            text.append(tb(np.array(self.Fi[j])))
+
+        text.append('\nmatrix c:')
+        text.append(tb(np.array(self.c)))
+
+        text.append('\nY rebuilt normalized :')
+        text.append(tb(np.array(self.F)))
+
+        text.append('\nY rebuilt :')
+        text.append(tb(self.F_.tolist()))
+
+        return '\n'.join(text)
+    
     def save_to_file(self):
         
         buffer = io.BytesIO()
@@ -404,8 +474,8 @@ class Solve(object):
             df = pd.DataFrame([self.F_[i].tolist()[0] for i in range(self.n)])
             df.to_excel(writer, sheet_name='Y перебудовані')
             
-#             df = pd.DataFrame([self.norm_error])
-#             df.to_excel(writer, sheet_name='Нормалізована похибка (Y - F)')
+            df = pd.DataFrame([self.norm_error])
+            df.to_excel(writer, sheet_name='Нормалізована похибка (Y - F)')
             
             df = pd.DataFrame([self.error])
             df.to_excel(writer, sheet_name='Похибка (Y_ - F_))')          

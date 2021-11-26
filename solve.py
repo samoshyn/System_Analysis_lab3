@@ -57,7 +57,7 @@ def scaling(y, f):
     return y_norm, f_norm
 
 def custom_func(x):
-    return np.sinh(x)
+    return np.arcsinh(x)
 
 class Solve(object):
     OFFSET = 1e-10

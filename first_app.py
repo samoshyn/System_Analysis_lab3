@@ -41,7 +41,8 @@ def search_params(df):
         st_x1, st_x2, st_x3 = comb
 
         dct = {
-        'poly_type': st.session_state['method'], # 
+        'poly_type': st.session_state['method'], #
+        'is_custom_f': st.session_state['method_f'],
         'input_file': st.session_state['df'],
         'samples': st.session_state['samples'],
         'dimensions': [st.session_state[i] for i in ['dim_x1', 'dim_x2', 'dim_x3', 'dim_y']], # rozmirnist' vectoriv (x1,x2,x3,y)
@@ -53,6 +54,7 @@ def search_params(df):
         #try:
         solver = Solve(dct)
         buffer, err = solver.prepare()
+        print(err, buffer)
         solution = PolynomialBuilder(solver)
         y = np.array(solution._solution.Y_)
         f = np.array(solution._solution.F_)
@@ -88,6 +90,8 @@ def config_params(df):
         st.error('Перевищена сумарна розмірність вибірки. Будь-ласка, змініть параметри для подальшої роботи')
     else:
         st.session_state['norm_params'] = True
+        method_f = st.radio('Вибір структури', ["Загальна", 
+                                                "Власна"], key='method_f')
         method = st.radio('Вид формули 𝜑', ["Формула 1 (Комбіновий дріб)", "Формула 2 (Ерміт)", 
                                             "Формула 3 (Лагерр)", "Формула 4 (Ерміт та зміщений Чебишев)",
                                             "Формула 5 (Раціональна сигмоїда)", "Формула 6 (Гіперболічний тангенс)",
@@ -127,12 +131,12 @@ def plots(solution):
     st.header('Графіки')
     cols = st.columns(solution._solution.Y.shape[1])
     for i, col in enumerate(cols):
-        time.sleep(0.02)
+        time.sleep(0.1)
         with col:
             col.subheader(f'Координата Y{i+1}')
             y = np.array(solution._solution.Y_[:, i]).reshape(-1,)
             f = np.array(solution._solution.F_[:, i]).reshape(-1,)
-            y, f, y_norm, f_norm = scaling(y, f)
+            y_norm, f_norm = scaling(y, f)
             err = abs(y_norm - f_norm)
             col.line_chart({"Y": y,
                            "F": f})
@@ -166,7 +170,8 @@ def main():
                 if confirm_params:
                     
                     dct = {
-                            'poly_type': st.session_state['method'], # 
+                            'poly_type': st.session_state['method'], #
+                            'is_custom_f': st.session_state['method_f'],
                             'input_file': st.session_state['df'],
                             'samples': st.session_state['samples'],
                             'dimensions': [st.session_state[i] for i in ['dim_x1', 'dim_x2', 'dim_x3', 'dim_y']], # rozmirnist' vectoriv (x1,x2,x3,y)
